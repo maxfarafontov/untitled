@@ -2,38 +2,20 @@
 
 class TransferProvider
 {
-    private string $location = ''; // адрес подключения
-    private $card_types = array('PsbDepositAccountCard',	//Пополнение карточки или счета Psb
-                                    'SberbankPhoneDeposit',	//Пополнение карты ПАО Сбербанк
-                                    'CashToCard',	//Пополнение банковской карты VISA/MasterCard/Мир любого банка по номеру карты и AmEx/DC для БРС
-                                    'Compass',	//Пополнение банковской карты China UnionPay(Compass)
-                                    'Otkritie',	//Пополнение карт (Otkritie)
-                                    'ElCard',	//Пополнение карт Киргизии (ElCard)
-                                    'Arca',	//Пополнение карт Армении (Arca)
-                                    'Compass_Mir',	//Пополнение банковской карты Мир(Compass)
-                                    'Brs',	//Пополнение банковской карты Банка русский стандарт
-                                    'KortiMilli',	//Пополнение карт Корти Милли
-                                    'UzCard',	//Пополнение карт Узбекистана (UzCard)
-                                    'UnionPayCard'	//Пополнение банковской карты China UnionPay(Compass)
-                                );
-
-    public function array_as_a_table(Array $data) : String{
-        $str = '<table class="table">
-            <thead>
-            <tr>
-                <td><b>Key</b></td>
-                <td><b>Value</b></td>
-            </tr>
-            </thead>';
-            foreach($data as $key => $value) {
-                $str .= "<tr>
-                    <td>$key</td>
-                    <td>$value</td>
-                </tr>";
-            }
-        $str .= '</table>';
-        return $str;
-    }
+    private string  $location = ''; // адрес подключения
+    private array   $card_types = array('PsbDepositAccountCard',	// Psb
+                                        'SberbankPhoneDeposit',	    // ПАО Сбербанк
+                                        'CashToCard',	            // VISA/MasterCard/Мир любого банка по номеру карты и AmEx/DC для БРС
+                                        'Compass',	                // China UnionPay(Compass)
+                                        'Otkritie',         	    // Otkritie
+                                        'ElCard',	                // ElCard
+                                        'Arca',	                    // Arca
+                                        'Compass_Mir',	            // Мир(Compass)
+                                        'Brs',	                    // Банк Русский Стандарт
+                                        'KortiMilli',	            // Корти Милли
+                                        'UzCard',	                // Карты Узбекистана (UzCard)
+                                        'UnionPayCard'	            // China UnionPay(Compass)
+                                        );
 
     function __construct(){
         $this->location = 'https://vivazzi.pro/test-request/';
@@ -68,53 +50,78 @@ class TransferProvider
                      'errors' => implode(' | ',$errors));
     }
 
-//    public static String createRefillOperation(
-//              RefillType  type,
-//              RefillData data);
-//    throws operationException, IOException;
-
     /**
      * Создание операции пополнения банковской карты стандартное
      *
-     * @param String $type RefillCardType - Тип карты для пополнения
-     * @param Array $data RefillData - Данные для перевода
+     * @param String    $card_type  Тип карты для пополнения
+     * @param Array     $data       Данные для перевода
      *
      * @return String Идентификатор созданной операции
      *
-     * @throws operationException
-     * @throws IOException
+     * @throws Exception
      */
-    public function createRefillOperation(String $type, Array $data) : Array {
-        $operation_id = '';
-        // array entry check
+    public function createRefillOperation(String $card_type, Array $data) : String {
+        $operation_id = "null";
+
         try {
-            if (!in_array($type, $this->card_types)) {
-                throw new Exception("Неверный тип банковской карты.");
+            // array entry check
+            if (!in_array($card_type, $this->card_types)) {
+                throw new InvalidArgumentException("неверный card_type (".implode(", ",$this->card_types).')');
+            }
+
+            // prepare request
+//            $ch = curl_init($this->location.'api/operation/refill/'.$card_type);
+            $ch = curl_init($this->location.'?json=true');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json'));
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_HEADER, false);
+            curl_setopt($ch, CURLOPT_FAILONERROR, true);
+            $result_json = curl_exec($ch);
+            $result_json = json_encode($result_json, JSON_UNESCAPED_UNICODE);
+
+            // check request for errors
+            $curl_errs = '';
+            if (curl_errno($ch)){
+                $curl_errs = curl_errno($ch);
+            }
+            curl_close($ch); // close handle
+
+            // throw exception after close handle!
+            if($curl_errs){
+                throw new Exception("Ошибка запроса: ".implode("|", $curl_errs));
+            }
+
+            // string to array conversion
+            $result_array = json_decode($result_json, true);
+
+            // check result
+            if(!isset($result_array['hasError']) || $result_array['message'] || $result_array['data']){
+                throw new Exception('Некорректный ответ сервера: '.$result_json);
+            } else if ((bool)$result_array['hasError'] === true){
+                throw new Exception('Ошибка сервера: '.$result_array['message']);
+            } else if(isset($result_array['data'])) {
+                $operation_id = (string)$result_array['data'];
             }
         } catch (Exception $e) {
-            return array('error'=> $e->getMessage());
-//            echo $e->getMessage();
-//            die();
+            echo $e->getMessage();
+            die();
         }
 
-//        $ch = curl_init($this->location.'api/operation/refill/'.'{type}');
-//        $ch = curl_init($this->location.'?json=true');
-        $ch = curl_init($this->location);
-//        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type:application/json')); // если JSON
-        curl_setopt($ch, CURLOPT_POST, 1);
-//        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data, JSON_UNESCAPED_UNICODE)); // если JSON
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data, '', '&'));
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        $result = curl_exec($ch);
-        curl_close($ch);
-//        $res = json_encode($res, JSON_UNESCAPED_UNICODE); // если JSON
+//        {
+//            "hasError": false,
+//            "message": "",
+//            "data": "3454356867"
+//        }
+//        {
+//            "hasError": true,
+//            "message": "Неизвестное поле \"operationId\" (class org.unistream.dto.CoreErrorDto",
+//            "data": null
+//        }
 
-
-
-        return array('operation_id'=> '', 'result'=> $result); // String	Идентификатор созданной операции
-//        return $operation_id; // String	Идентификатор созданной операции
+        return $operation_id;
     }
 
 
