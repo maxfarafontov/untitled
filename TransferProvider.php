@@ -18,7 +18,7 @@ class TransferProvider
                                         );
 
     function __construct(){
-        $this->location = 'https://vivazzi.pro/test-request/';
+        $this->location = '';
     }
 
     public function getLocation() : String
@@ -28,26 +28,6 @@ class TransferProvider
     public function setLocation($location)
     {
         $this->location = $location;
-    }
-
-    // тестирование запроса curl
-    public function sendRequest() : Array{
-        $errors=array();
-
-        $ch = curl_init($this->location);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_HEADER, false);
-        $result = curl_exec($ch);
-
-        if($result === false){
-            $errors[] = 'Ошибка curl: ' . curl_error($ch);
-            $result = 0;
-        }
-
-        curl_close($ch);
-        return array('result' => $result,
-                     'errors' => implode(' | ',$errors));
     }
 
     /**
@@ -83,22 +63,30 @@ class TransferProvider
             $result_json = json_encode($result_json, JSON_UNESCAPED_UNICODE);
 
             // check request for errors
-            $curl_errs = '';
+
             if (curl_errno($ch)){
-                $curl_errs = curl_errno($ch);
+                $curl_errs = curl_error($ch);
             }
             curl_close($ch); // close handle
 
             // throw exception after close handle!
-            if($curl_errs){
-                throw new Exception("Ошибка запроса: ".implode("|", $curl_errs));
+            if(isset($curl_errs)){
+                throw new Exception("Ошибка запроса: ".$curl_errs);
             }
 
             // string to array conversion
+            $result_json = '{
+                            "hasError": false,
+                            "message": "",
+                            "data": "3454356867"
+                        }';
+//            $result_json = json_encode($result_json, JSON_UNESCAPED_UNICODE);
             $result_array = json_decode($result_json, true);
-
+//            var_dump($result_array);
+//            print_r( $result_array);
             // check result
-            if(!isset($result_array['hasError']) || $result_array['message'] || $result_array['data']){
+//            echo $result_array['data'];
+            if(isset($result_array['data']) === false){
                 throw new Exception('Некорректный ответ сервера: '.$result_json);
             } else if ((bool)$result_array['hasError'] === true){
                 throw new Exception('Ошибка сервера: '.$result_array['message']);

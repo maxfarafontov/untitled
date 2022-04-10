@@ -25,36 +25,25 @@ $method = isset($_POST['method'])?($_POST['method']):1;
 $test = new TransferProvider();
 $test->setLocation($location);
 
-$RefillData = array("clientId"              =>"e7cea3cb-9fb5-9c18-3445-5b9fe2470ddb",
-                      "card"                =>"45647568768",
-                      "acceptedCurrency"    =>"RUB",
-                      "withdrawCurrency"    =>"RUB",
-                      "amount"              =>"100",
-                      "recipientFirstName"  =>"Тест",
-                      "recipientLastName"   =>"Тестовый",
-                      "recipientMiddleName" =>"Тестович",
-                      "cardEnprintedName"   =>"TESTVICH",
-                      "claimTransferDetails"=>"details",
-                      "senderPosCountry"    =>"RU"
-                    );
+
 
 //$result = $test->sendRequest();
-$result = $test->createRefillOperation('SberbankPhoneDeposit', $RefillData);
+
 
 ?>
 <html>
 <title>Transfer Provider</title>
     <head>
         <meta charset="UTF-8">
-        <link href="bootstrap.min.css" rel="stylesheet">
-        <script src="bootstrap.bundle.min.js"></script>
-        <script src="script.js"></script>
+        <link href="resources/bootstrap.min.css" rel="stylesheet">
+        <script src="resources/bootstrap.bundle.min.js"></script>
+        <script src="resources/script.js"></script>
 
     </head>
     <body class="py-4">
         <main>
             <div class="container-md">
-                <h2><a href="/">Testing connector</a></h2>
+                <h2><a href="/">Transfer provider</a></h2>
                 <div class="row mb-1">
                     <div class="col-4">
                         <p class="lead"><b>Адрес тестового запроса: </b>https://vivazzi.pro/test-request/</p>
@@ -76,13 +65,13 @@ $result = $test->createRefillOperation('SberbankPhoneDeposit', $RefillData);
                         <div class="row">
                             <div class="col-sm">
                                 <select class="form-control" name="method">
-                                    <option id="createRefillOperation1" <?php $method=='createRefillOperation1'?'selected':"" ?>>createRefillOperation1</option>
-                                    <option id="createRefillOperation2" <?php $method=='createRefillOperation2'?'selected':"" ?>>createRefillOperation2</option>
-                                    <option id="createPayOperation" <?php $method=='createPayOperation'?'selected':"" ?>>createPayOperation</option>
-                                    <option id="createTransferOperation" <?php $method=='createTransferOperation'?'selected':"" ?>>createTransferOperation</option>
-                                    <option id="declineOperation" <?php $method=='declineOperation'?'selected':"" ?>>declineOperation</option>
-                                    <option id="getOperationList" <?php $method=='getOperationList'?'selected':"" ?>>getOperationList</option>
-                                    <option id="getOperationData" <?php $method=='getOperationData'?'selected':"" ?>>getOperationData</option>
+                                    <option id="createRefillOperation1" <?php echo $method=='createRefillOperation1'?'selected':"" ?>>createRefillOperation1</option>
+                                    <option id="createRefillOperation2" <?php echo $method=='createRefillOperation2'?'selected':"" ?>>createRefillOperation2</option>
+                                    <option id="createPayOperation" <?php echo $method=='createPayOperation'?'selected':"" ?>>createPayOperation</option>
+                                    <option id="createTransferOperation" <?php echo $method=='createTransferOperation'?'selected':"" ?>>createTransferOperation</option>
+                                    <option id="declineOperation" <?php echo $method=='declineOperation'?'selected':"" ?>>declineOperation</option>
+                                    <option id="getOperationList" <?php echo $method=='getOperationList'?'selected':"" ?>>getOperationList</option>
+                                    <option id="getOperationData" <?php echo $method=='getOperationData'?'selected':"" ?>>getOperationData</option>
                                 </select>
                             </div>
                             <div class="col-sm">
@@ -103,68 +92,100 @@ $result = $test->createRefillOperation('SberbankPhoneDeposit', $RefillData);
                             </div>
                         </div>
                     </div>
+
+
+                    <div class="row">
+                    <?php
+                    switch ($method){
+                        case 'createRefillOperation1':
+                            $arg1 = 'SberbankPhoneDeposit';
+
+                            $RefillData = array("clientId"              =>"e7cea3cb-9fb5-9c18-3445-5b9fe2470ddb",
+                                "card"                =>"45647568768",
+                                "acceptedCurrency"    =>"RUB",
+                                "withdrawCurrency"    =>"RUB",
+                                "amount"              =>"100",
+                                "recipientFirstName"  =>"Тест",
+                                "recipientLastName"   =>"Тестовый",
+                                "recipientMiddleName" =>"Тестович",
+                                "cardEnprintedName"   =>"TESTVICH",
+                                "claimTransferDetails"=>"details",
+                                "senderPosCountry"    =>"RU"
+                            );
+
+                            ?>
+                            <table class="table table-bordered table-striped">
+                                <tr>
+                                    <td class="col-md-2">Метод </td>
+                                    <td class="col-md-4"><?php echo $method?></td>
+                                </tr>
+                                <tr>
+                                    <td class="col-md-2">Тип запроса </td>
+                                    <td class="col-md-4">POST</td>
+                                </tr>
+                                <tr>
+                                    <td class="col-md-2">Аргумент 1</td>
+                                    <td class="col-md-4"><?php echo $arg1?></td>
+                                </tr>
+                                <tr>
+                                    <td class="col-md-2">Аргумент 2</td>
+                                    <td class="col-md-4"><pre><?php print_r(json_encode($RefillData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))?></pre></td>
+                                </tr>
+                                <tr>
+                                    <td class="col-md-2">Результат</td>
+                                    <td class="col-md-4"><pre><?php
+                                        try {
+                                            echo $test->createRefillOperation($arg1, $RefillData);
+                                        } catch (Exception $e) {
+                                            echo $e->getMessage();
+                                        }
+                                    ?></pre></td>
+                                </tr>
+
+                            </table>
+                            <?php
+                            break;
+                        case 'createRefillOperation2':
+                            echo 'function '.$method;
+                            break;
+                        case 'createPayOperation':
+                            echo 'function '.$method;
+                            break;
+                        case 'createTransferOperation':
+                            echo 'function '.$method;
+                            break;
+                        case 'declineOperation':
+                            echo 'function '.$method;
+                            break;
+                        case 'getOperationList':
+                            echo 'function '.$method;
+                            break;
+                        case 'getOperationData':
+                            echo 'function '.$method;
+                            break;
+                    }
+
+                    ?>
+
+                        <hr>
+                        <h4>POST в текущей форме</h4>
+                        <table class="table table-bordered table-striped">
+                        <thead>
+                        <tr>
+                            <td><b>Key</b></td>
+                            <td><b>Value</b></td>
+                        </tr>
+                        </thead>
+                        <?php foreach($_POST as $key => $value): ?>
+                            <tr>
+                                <td><?php echo $key?></td>
+                                <td><?php echo $value?></td>
+                            </tr>
+                        <?php endforeach; ?>
+
+                    </table>
+                    </div>
                 </form>
-
-                <?php
-                switch ($method){
-                    case 'createRefillOperation1':
-                        echo 'function '.$method;
-                        echo array_as_a_table($result);
-                        break;
-                    case 'createRefillOperation2':
-                        echo 'function '.$method;
-                        break;
-                    case 'createPayOperation':
-                        echo 'function '.$method;
-                        break;
-                    case 'createTransferOperation':
-                        echo 'function '.$method;
-                        break;
-                    case 'declineOperation':
-                        echo 'function '.$method;
-                        break;
-                    case 'getOperationList':
-                        echo 'function '.$method;
-                        break;
-                    case 'getOperationData':
-                        echo 'function '.$method;
-                        break;
-                }
-
-                ?>
-
-                <p>Название метода</p>
-                <p>Тип запроса</p>
-                <p>Адрес</p>
-                <p>Запрос</p>
-                <p>Ответ</p>
-                <p>Ошибки</p>
-
-
-                <hr>
-                <h2>Тест функции </h2>
-                <?php
-        //            echo $test->array_as_a_table($test->createRefillOperation('SberbankPhoneDeposit', array('val1','val2')));
-        //            echo $test->createRefillOperation('SberbankPhoneDeposit', array('val1','val2'));
-                ?>
-                <hr>
-
-                <span>Данные в форме:</span>
-                <table class="table">
-                <thead>
-                <tr>
-                    <td><b>Key</b></td>
-                    <td><b>Value</b></td>
-                </tr>
-                </thead>
-                <?php foreach($_POST as $key => $value): ?>
-                    <tr>
-                        <td><?php echo $key?></td>
-                        <td><?php echo $value?></td>
-                    </tr>
-                <?php endforeach; ?>
-
-            </table>
             </div>
         </main>
     </body>
